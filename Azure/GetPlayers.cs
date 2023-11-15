@@ -33,7 +33,7 @@ namespace DynamicBox.CloudScripts
 
                 var getUserDataRequest = new GetUserDataRequest
                 {
-                    PlayFabId = data.playFabId,
+                    PlayFabId = playFabId,
                     Keys = new List<string>
                     {
                         creditKey
@@ -42,13 +42,13 @@ namespace DynamicBox.CloudScripts
 
                 var settings = new PlayFabApiSettings
                 {
-                    TitleId = data.titleId,
+                    TitleId = titleId,
                     DeveloperSecretKey = Environment.GetEnvironmentVariable("PLAYFAB_DEV_SECRET_KEY", EnvironmentVariableTarget.Process)
                 };
 
                 var authContext = new PlayFabAuthenticationContext
                 {
-                    EntityToken = data.entityToken
+                    EntityToken = entityToken
                 };
 
                 var serverApi = new PlayFabServerInstanceAPI(settings, authContext);
@@ -58,11 +58,11 @@ namespace DynamicBox.CloudScripts
                 {
                     var updateUserDataRequest = new UpdateUserDataRequest
                     {
-                        PlayFabId = data.playFabId,
+                        PlayFabId = playFabId,
 
                         Data = new Dictionary<string, string>()
                     {
-                        {data.creditKey, "0"},
+                        {creditKey, "0"},
                        /*  {TokenKey, "0"},
                         {Tier1Key, "0"},
                         {Tier2Key, "0"},
