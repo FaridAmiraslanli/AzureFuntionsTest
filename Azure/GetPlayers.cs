@@ -16,16 +16,6 @@ namespace DynamicBox.CloudScripts
 {
     public static class GetUserData
     {
-
-        private const string titleId = "F4A07";
-        private const string playFabId = "6B53F263D81D61F5";
-        private const string entityToken = "NHw5a2RmdXJQaVRwNk1SY3V1VE0wamhldHppWGVxb04wcEQ5bzVmUDVjQnhjPXx7ImkiOiIyMDIzLTExLTE1VDA3OjE4OjExWiIsImlkcCI6IkN1c3RvbSIsImUiOiIyMDIzLTExLTE2VDA3OjE4OjExWiIsImZpIjoiMjAyMy0xMS0xNVQwNzoxODoxMVoiLCJ0aWQiOiJVaTRrNTR6eEVmMCIsImlkaSI6IjE4RDc2OTU1MjRBOUZFREMiLCJoIjoiQjRGNzQyMjZBOTU3OTM4QyIsImVjIjoidGl0bGVfcGxheWVyX2FjY291bnQhMzVBNzUxMTM1Njc5MTlDRS9GNEEwNy82QjUzRjI2M0Q4MUQ2MUY1L0MwQ0Q2NTk2Q0ZCMjk1MkUvIiwiZWkiOiJDMENENjU5NkNGQjI5NTJFIiwiZXQiOiJ0aXRsZV9wbGF5ZXJfYWNjb3VudCJ9";
-        private const string CreditKey = "alma";
-        // private const string TokenKey = "TokenCount";
-        // private const string Tier1Key = "Tier1";
-        // private const string Tier2Key = "Tier2";
-        // private const string Tier3Key = "Tier3";
-
         [FunctionName("GetUserData")]
         public static async Task<dynamic> Run(
            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
@@ -33,44 +23,46 @@ namespace DynamicBox.CloudScripts
         {
             try
             {
+                string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+                dynamic data = JsonConvert.DeserializeObject(requestBody);
 
-                FunctionExecutionContext<dynamic> context = JsonConvert.DeserializeObject<FunctionExecutionContext<dynamic>>(await req.ReadAsStringAsync());
-
-                var args = context.FunctionArgument;
-
+                string titleId = data.titleId;
+                string playFabId = data.playFabId;
+                string entityToken = data.entityToken;
+                string creditKey = data.creditKey;
 
                 var getUserDataRequest = new GetUserDataRequest
                 {
-                    PlayFabId = playFabId /* context.CallerEntityProfile.Lineage.MasterPlayerAccountId */,
+                    PlayFabId = data.playFabId,
                     Keys = new List<string>
                     {
-                        CreditKey/* ,TokenKey,Tier1Key,Tier2Key,Tier3Key */
+                        creditKey
                     }
                 };
 
                 var settings = new PlayFabApiSettings
                 {
-                    TitleId = titleId/* context.TitleAuthenticationContext.Id */,
+                    TitleId = data.titleId,
                     DeveloperSecretKey = Environment.GetEnvironmentVariable("PLAYFAB_DEV_SECRET_KEY", EnvironmentVariableTarget.Process)
                 };
 
                 var authContext = new PlayFabAuthenticationContext
                 {
-                    EntityToken = entityToken/* context.TitleAuthenticationContext.EntityToken */
+                    EntityToken = data.entityToken
                 };
 
                 var serverApi = new PlayFabServerInstanceAPI(settings, authContext);
                 var getUserDataResult = await serverApi.GetUserDataAsync(getUserDataRequest);
 
-                if (!getUserDataResult.Result.Data.ContainsKey(CreditKey)) // that means the player is a new user. need to add data keys
+                if (!getUserDataResult.Result.Data.ContainsKey(creditKey)) 
                 {
                     var updateUserDataRequest = new UpdateUserDataRequest
                     {
-                        PlayFabId = playFabId /* context.CallerEntityProfile.Lineage.MasterPlayerAccountId */,
+                        PlayFabId = data.playFabId,
 
                         Data = new Dictionary<string, string>()
                     {
-                        {CreditKey, "0"},
+                        {data.creditKey, "0"},
                        /*  {TokenKey, "0"},
                         {Tier1Key, "0"},
                         {Tier2Key, "0"},
@@ -90,6 +82,7 @@ namespace DynamicBox.CloudScripts
             {
 
                 Console.WriteLine("Exception " + ex.ToString());
+                return new BadRequestObjectResult(ex);
             }
         }
     }
