@@ -16,10 +16,11 @@ namespace DynamicBox.CloudScripts
 {
     public static class GetUserData
     {
+
         private const string titleId = "F4A07";
         private const string playFabId = "6B53F263D81D61F5";
-        private const string entityToken  = "NHxEdlV4YStsUVZyR0s1VS9mclJ2bWZwZ2dTclpjV1lPbmpEYlU4cVJZcTQ4PXx7ImkiOiIyMDIzLTExLTE0VDE2OjEwOjAwWiIsImlkcCI6IkN1c3RvbSIsImUiOiIyMDIzLTExLTE1VDE2OjEwOjAwWiIsImZpIjoiMjAyMy0xMS0xNFQxNjoxMDowMFoiLCJ0aWQiOiJWYkVSVTRwWFppQSIsImlkaSI6IjE4RDc2OTU1MjRBOUZFREMiLCJoIjoiQjRGNzQyMjZBOTU3OTM4QyIsImVjIjoidGl0bGVfcGxheWVyX2FjY291bnQhMzVBNzUxMTM1Njc5MTlDRS9GNEEwNy82QjUzRjI2M0Q4MUQ2MUY1L0MwQ0Q2NTk2Q0ZCMjk1MkUvIiwiZWkiOiJDMENENjU5NkNGQjI5NTJFIiwiZXQiOiJ0aXRsZV9wbGF5ZXJfYWNjb3VudCJ9";
-        private const string CreditKey  = "alma";
+        private const string entityToken = "NHw5a2RmdXJQaVRwNk1SY3V1VE0wamhldHppWGVxb04wcEQ5bzVmUDVjQnhjPXx7ImkiOiIyMDIzLTExLTE1VDA3OjE4OjExWiIsImlkcCI6IkN1c3RvbSIsImUiOiIyMDIzLTExLTE2VDA3OjE4OjExWiIsImZpIjoiMjAyMy0xMS0xNVQwNzoxODoxMVoiLCJ0aWQiOiJVaTRrNTR6eEVmMCIsImlkaSI6IjE4RDc2OTU1MjRBOUZFREMiLCJoIjoiQjRGNzQyMjZBOTU3OTM4QyIsImVjIjoidGl0bGVfcGxheWVyX2FjY291bnQhMzVBNzUxMTM1Njc5MTlDRS9GNEEwNy82QjUzRjI2M0Q4MUQ2MUY1L0MwQ0Q2NTk2Q0ZCMjk1MkUvIiwiZWkiOiJDMENENjU5NkNGQjI5NTJFIiwiZXQiOiJ0aXRsZV9wbGF5ZXJfYWNjb3VudCJ9";
+        private const string CreditKey = "alma";
         // private const string TokenKey = "TokenCount";
         // private const string Tier1Key = "Tier1";
         // private const string Tier2Key = "Tier2";
@@ -30,41 +31,44 @@ namespace DynamicBox.CloudScripts
            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
            ILogger log)
         {
-            FunctionExecutionContext<dynamic> context = JsonConvert.DeserializeObject<FunctionExecutionContext<dynamic>>(await req.ReadAsStringAsync());
-
-            var args = context.FunctionArgument;
-           
-
-            var getUserDataRequest = new GetUserDataRequest
+            try
             {
-                PlayFabId = playFabId /* context.CallerEntityProfile.Lineage.MasterPlayerAccountId */,
-                Keys = new List<string>
+
+                FunctionExecutionContext<dynamic> context = JsonConvert.DeserializeObject<FunctionExecutionContext<dynamic>>(await req.ReadAsStringAsync());
+
+                var args = context.FunctionArgument;
+
+
+                var getUserDataRequest = new GetUserDataRequest
+                {
+                    PlayFabId = playFabId /* context.CallerEntityProfile.Lineage.MasterPlayerAccountId */,
+                    Keys = new List<string>
                     {
                         CreditKey/* ,TokenKey,Tier1Key,Tier2Key,Tier3Key */
                     }
-            };
+                };
 
-            var settings = new PlayFabApiSettings
-            {
-                TitleId = titleId/* context.TitleAuthenticationContext.Id */,
-                DeveloperSecretKey = Environment.GetEnvironmentVariable("PLAYFAB_DEV_SECRET_KEY", EnvironmentVariableTarget.Process)
-            };
-
-            var authContext = new PlayFabAuthenticationContext
-            {
-                EntityToken = entityToken/* context.TitleAuthenticationContext.EntityToken */
-            };
-
-            var serverApi = new PlayFabServerInstanceAPI(settings, authContext);
-            var getUserDataResult = await serverApi.GetUserDataAsync(getUserDataRequest);
-
-            if (!getUserDataResult.Result.Data.ContainsKey(CreditKey)) // that means the player is a new user. need to add data keys
-            {
-                var updateUserDataRequest = new UpdateUserDataRequest
+                var settings = new PlayFabApiSettings
                 {
-                    PlayFabId = playFabId /* context.CallerEntityProfile.Lineage.MasterPlayerAccountId */,
+                    TitleId = titleId/* context.TitleAuthenticationContext.Id */,
+                    DeveloperSecretKey = Environment.GetEnvironmentVariable("PLAYFAB_DEV_SECRET_KEY", EnvironmentVariableTarget.Process)
+                };
 
-                    Data = new Dictionary<string, string>()
+                var authContext = new PlayFabAuthenticationContext
+                {
+                    EntityToken = entityToken/* context.TitleAuthenticationContext.EntityToken */
+                };
+
+                var serverApi = new PlayFabServerInstanceAPI(settings, authContext);
+                var getUserDataResult = await serverApi.GetUserDataAsync(getUserDataRequest);
+
+                if (!getUserDataResult.Result.Data.ContainsKey(CreditKey)) // that means the player is a new user. need to add data keys
+                {
+                    var updateUserDataRequest = new UpdateUserDataRequest
+                    {
+                        PlayFabId = playFabId /* context.CallerEntityProfile.Lineage.MasterPlayerAccountId */,
+
+                        Data = new Dictionary<string, string>()
                     {
                         {CreditKey, "0"},
                        /*  {TokenKey, "0"},
@@ -72,14 +76,21 @@ namespace DynamicBox.CloudScripts
                         {Tier2Key, "0"},
                         {Tier3Key, "0"}, */
                     }
-                };
-                await serverApi.UpdateUserDataAsync(updateUserDataRequest);
+                    };
+                    await serverApi.UpdateUserDataAsync(updateUserDataRequest);
 
-                var getUpdatedUserDataResult = await serverApi.GetUserDataAsync(getUserDataRequest);
-                return getUpdatedUserDataResult.Result.Data;
+                    var getUpdatedUserDataResult = await serverApi.GetUserDataAsync(getUserDataRequest);
+                    return getUpdatedUserDataResult.Result.Data;
+                }
+
+                return getUserDataResult.Result.Data;
+
             }
+            catch (Exception ex)
+            {
 
-            return getUserDataResult.Result.Data;
+                Console.WriteLine("Exception " + ex.ToString());
+            }
         }
     }
 }
