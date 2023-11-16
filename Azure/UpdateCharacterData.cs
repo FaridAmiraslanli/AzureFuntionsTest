@@ -21,6 +21,8 @@ namespace DynamicBox.CloudScripts
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
+           try
+            {
             FunctionExecutionContext<dynamic> context = JsonConvert.DeserializeObject<FunctionExecutionContext<dynamic>>(await req.ReadAsStringAsync());
 
             var args = context.FunctionArgument;
@@ -29,7 +31,7 @@ namespace DynamicBox.CloudScripts
             string playFabId = args["PlayFabId"]; 
             string characterId = args["CharacterId"]; 
 
-            string leftGunType = args["LeftGunType"];
+            string leftGunType = args["LeftGunType"]; 
             string rightGunType = args["RightGunType"];
 
             string nitroValue = "1.7";
@@ -44,24 +46,25 @@ namespace DynamicBox.CloudScripts
             {
                 EntityToken = args["EntityToken"]
             };
-
+            
             var serverApi = new PlayFabServerInstanceAPI(settings, authContext);
 
-            // Engine engine = new Engine
-            // {
-            //     Acceleration = 3.7f,
-            //     MaxSpeed = 5.9f
-            // };
+            Engine engine = new Engine
+            {
+                Acceleration = 3.7f,
+                MaxSpeed = 5.9f
+            };
 
-            // string engineJsonData = JsonConvert.SerializeObject(engine);
+            string engineJsonData = JsonConvert.SerializeObject(engine);
 
-            // Steering steering = new Steering
-            // {
-            //     Acceleration = 0.5f,
-            //     MaxRotation = 52f
-            // };
+            Steering steering = new Steering
+            {
+                Acceleration = 0.5f,
+                MaxRotation = 52f
+            };
 
-            // string steeringJsonData = JsonConvert.SerializeObject(steering);
+            string steeringJsonData = JsonConvert.SerializeObject(steering);
+
 
             var updateCharacterDataRequest = new UpdateCharacterDataRequest
             {
@@ -69,19 +72,17 @@ namespace DynamicBox.CloudScripts
                 CharacterId = characterId,
                       Data = new Dictionary<string, string>()
                     {
-                        {DataKeys.LeftGunKey, leftGunType},
-                        {DataKeys.RightGunKey, rightGunType},
-					    {DataKeys.NitroKey, nitroValue},
-					    // {DataKeys.EngineKey, engineJsonData},
-					    // {DataKeys.SteeringKey, steeringJsonData},
+                        {DataKeys.LeftGunKey, $"\"{leftGunType}\""},
+                        {DataKeys.RightGunKey, $"\"{rightGunType}\""},
+					    {DataKeys.NitroKey, $"\"{nitroValue}\""},
+					    {DataKeys.EngineKey, engineJsonData},
+					    {DataKeys.SteeringKey, steeringJsonData},
                     }
             };
 
-            try
-            {
                 var updateCharacterDataResult = await serverApi.UpdateCharacterDataAsync(updateCharacterDataRequest);
                 
-                return updateCharacterDataResult.Result.ToString();
+                return updateCharacterDataResult.Result;
             }
             catch (PlayFabException ex)
             {
