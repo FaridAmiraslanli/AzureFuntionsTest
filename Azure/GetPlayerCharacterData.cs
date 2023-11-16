@@ -16,6 +16,10 @@ namespace DynamicBox.CloudScripts
 {
     public static class GetPlayerCharacterData
     {
+        private const string DamageKey = "Damage";
+        private const string HealthKey = "Health";
+        private const string SpeedKey = "Speed";
+
         [FunctionName("GetPlayerCharacterData")]
         public static async Task<dynamic> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
@@ -25,59 +29,59 @@ namespace DynamicBox.CloudScripts
 
             var args = context.FunctionArgument;
 
-            string titleId = args["titleId"];
-            string entityId = args["entityId"]; // This should be the PlayFabId of the player
-            string characterId = args["characterId"]; // The specific character's ID for which you want to get data
+            string TitleId = args["TitleId"];
+            string PlayFabId = args["PlayFabId"]; 
+            string CharacterId = args["CharacterId"]; 
 
             var settings = new PlayFabApiSettings
             {
-                TitleId = titleId,
+                TitleId = TitleId,
                 DeveloperSecretKey = Environment.GetEnvironmentVariable("PLAYFAB_DEV_SECRET_KEY", EnvironmentVariableTarget.Process)
             };
 
             var authContext = new PlayFabAuthenticationContext
             {
-                EntityToken = args["entityToken"]
+                EntityToken = args["EntityToken"]
             };
 
             var serverApi = new PlayFabServerInstanceAPI(settings, authContext);
 
-            // Get character data
+            
             var getCharacterDataRequest = new GetCharacterDataRequest
             {
-                PlayFabId = entityId,
-                CharacterId = characterId,
-                // Keys = new List<string>
-                // {
-                //     "YourCharacterDataKey" // Replace with the key for the character data you want to retrieve
-                // }
+                PlayFabId = PlayFabId,
+                CharacterId = CharacterId,
+                Keys = new List<string>
+                {
+                   DamageKey,HealthKey,SpeedKey
+                }
             };
 
             try
             {
                 var getCharacterDataResult = await serverApi.GetCharacterDataAsync(getCharacterDataRequest);
-
-                if (getCharacterDataResult.Result.Data.ContainsKey("YourCharacterDataKey"))
-                {
-                    var characterDataValue = getCharacterDataResult.Result.Data["YourCharacterDataKey"].Value;
-                    return new
-                    {
-                        success = true,
-                        characterData = characterDataValue
-                    };
-                }
-                else
-                {
-                    return new
-                    {
-                        success = false,
-                        error = "Character data key not found"
-                    };
-                }
+                
+                return $"Damage = {getCharacterDataResult.Result.Data[DamageKey].Value} / Health = {getCharacterDataResult.Result.Data[HealthKey].Value} / Speed = {getCharacterDataResult.Result.Data[SpeedKey].Value}";
+                // if (getCharacterDataResult.Result.Data.ContainsKey("YourCharacterDataKey"))
+                // {
+                //     var characterDataValue = getCharacterDataResult.Result.Data["YourCharacterDataKey"].Value;
+                //     return new
+                //     {
+                //         success = true,
+                //         characterData = characterDataValue
+                //     };
+                // }
+                // else
+                // {
+                //     return new
+                //     {
+                //         success = false,
+                //         error = "Character data key not found"
+                //     };
+                // }
             }
             catch (PlayFabException ex)
             {
-                // Handle the exception
                 log.LogError($"Error getting character data: {ex.Message}");
                 return new
                 {
