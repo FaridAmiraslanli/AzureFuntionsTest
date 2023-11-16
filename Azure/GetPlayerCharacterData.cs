@@ -16,11 +16,6 @@ namespace DynamicBox.CloudScripts
 {
     public static class GetPlayerCharacterData
     {
-        private const string LeftGunKey = "LeftGunType";
-        private const string RightGunKey = "RightGunType";
-        private const string NitroKey = "Nitro";
-        private const string EngineKey = "Engine";
-        private const string SteeringKey = "Steering";
 
         [FunctionName("GetPlayerCharacterData")]
         public static async Task<dynamic> Run(
@@ -31,13 +26,13 @@ namespace DynamicBox.CloudScripts
 
             var args = context.FunctionArgument;
 
-            string TitleId = args["TitleId"];
-            string PlayFabId = args["PlayFabId"]; 
-            string CharacterId = args["CharacterId"]; 
+            string titleId = args["TitleId"];
+            string playFabId = args["PlayFabId"]; 
+            string characterId = args["CharacterId"]; 
 
             var settings = new PlayFabApiSettings
             {
-                TitleId = TitleId,
+                TitleId = titleId,
                 DeveloperSecretKey = Environment.GetEnvironmentVariable("PLAYFAB_DEV_SECRET_KEY", EnvironmentVariableTarget.Process)
             };
 
@@ -51,11 +46,11 @@ namespace DynamicBox.CloudScripts
             
             var getCharacterDataRequest = new GetCharacterDataRequest
             {
-                PlayFabId = PlayFabId,
-                CharacterId = CharacterId,
+                PlayFabId = playFabId,
+                CharacterId = characterId,
                 Keys = new List<string>
                 {
-                   LeftGunKey, RightGunKey, NitroKey, EngineKey, SteeringKey
+                   DataKeys.LeftGunKey, DataKeys.RightGunKey, DataKeys.NitroKey, DataKeys.EngineKey, DataKeys.SteeringKey
                 }
             };
 
@@ -63,13 +58,13 @@ namespace DynamicBox.CloudScripts
             {
                 var getCharacterDataResult = await serverApi.GetCharacterDataAsync(getCharacterDataRequest);
                 
-                Engine engine = JsonConvert.DeserializeObject<Engine>(getCharacterDataResult.Result.Data[EngineKey].Value);
-                Steering steering = JsonConvert.DeserializeObject<Steering>(getCharacterDataResult.Result.Data[SteeringKey].Value);
+                Engine engine = JsonConvert.DeserializeObject<Engine>(getCharacterDataResult.Result.Data[DataKeys.EngineKey].Value);
+                Steering steering = JsonConvert.DeserializeObject<Steering>(getCharacterDataResult.Result.Data[DataKeys.SteeringKey].Value);
                 Data data = new Data
                 {
-                    LeftGunType = getCharacterDataResult.Result.Data[LeftGunKey].Value,
-                    RightGunType = getCharacterDataResult.Result.Data[RightGunKey].Value,
-                    Nitro = float.Parse(getCharacterDataResult.Result.Data[NitroKey].Value),
+                    LeftGunType = getCharacterDataResult.Result.Data[DataKeys.LeftGunKey].Value,
+                    RightGunType = getCharacterDataResult.Result.Data[DataKeys.RightGunKey].Value,
+                    Nitro = float.Parse(getCharacterDataResult.Result.Data[DataKeys.NitroKey].Value),
                     Engine = engine,
                     Steering = steering
                 };
@@ -95,6 +90,15 @@ namespace DynamicBox.CloudScripts
                 };
             }
         }
+    }
+
+    public static class DataKeys
+    {
+        public const string LeftGunKey = "LeftGunType";
+        public const string RightGunKey = "RightGunType";
+        public const string NitroKey = "Nitro";
+        public const string EngineKey = "Engine";
+        public const string SteeringKey = "Steering";
     }
 
     [Serializable]
