@@ -16,9 +16,11 @@ namespace DynamicBox.CloudScripts
 {
     public static class GetPlayerCharacterData
     {
-        private const string DamageKey = "Damage";
-        private const string HealthKey = "Health";
-        private const string SpeedKey = "Speed";
+        private const string LeftGunKey = "LeftGunType";
+        private const string RightGunKey = "RightGunType";
+        private const string NitroKey = "Nitro";
+        private const string EngineKey = "Engine";
+        private const string SteeringKey = "Steering";
 
         [FunctionName("GetPlayerCharacterData")]
         public static async Task<dynamic> Run(
@@ -53,7 +55,7 @@ namespace DynamicBox.CloudScripts
                 CharacterId = CharacterId,
                 Keys = new List<string>
                 {
-                   DamageKey,HealthKey,SpeedKey
+                   LeftGunKey, RightGunKey, NitroKey, EngineKey, SteeringKey
                 }
             };
 
@@ -61,24 +63,27 @@ namespace DynamicBox.CloudScripts
             {
                 var getCharacterDataResult = await serverApi.GetCharacterDataAsync(getCharacterDataRequest);
                 
-                return $"Damage = {getCharacterDataResult.Result.Data[DamageKey].Value} / Health = {getCharacterDataResult.Result.Data[HealthKey].Value} / Speed = {getCharacterDataResult.Result.Data[SpeedKey].Value}";
-                // if (getCharacterDataResult.Result.Data.ContainsKey("YourCharacterDataKey"))
-                // {
-                //     var characterDataValue = getCharacterDataResult.Result.Data["YourCharacterDataKey"].Value;
-                //     return new
-                //     {
-                //         success = true,
-                //         characterData = characterDataValue
-                //     };
-                // }
-                // else
-                // {
-                //     return new
-                //     {
-                //         success = false,
-                //         error = "Character data key not found"
-                //     };
-                // }
+                Engine engine = JsonConvert.DeserializeObject<Engine>(getCharacterDataResult.Result.Data[EngineKey].Value);
+                Steering steering = JsonConvert.DeserializeObject<Steering>(getCharacterDataResult.Result.Data[SteeringKey].Value);
+                Data data = new Data
+                {
+                    LeftGunType = getCharacterDataResult.Result.Data[LeftGunKey].Value,
+                    RightGunType = getCharacterDataResult.Result.Data[RightGunKey].Value,
+                    Nitro = float.Parse(getCharacterDataResult.Result.Data[NitroKey].Value),
+                    Engine = engine,
+                    Steering = steering
+                };
+
+                GetPlayerCharacterResultData resultData = new GetPlayerCharacterResultData
+                {
+                    ResponseType = "GetPlayerCharacterData",
+                    Data = data
+                };
+
+                string json = JsonConvert.SerializeObject(resultData);
+
+                return json;
+
             }
             catch (PlayFabException ex)
             {
@@ -90,5 +95,38 @@ namespace DynamicBox.CloudScripts
                 };
             }
         }
+    }
+
+    [Serializable]
+    public class GetPlayerCharacterResultData
+    {
+        public string ResponseType;
+
+        public Data Data;
+
+    }
+
+    [Serializable]
+    public class Data
+    {
+        public string LeftGunType;
+        public string RightGunType;
+        public float Nitro;
+        public Engine Engine;
+        public Steering Steering;
+    }
+
+    [Serializable]
+    public class Engine
+    {
+        public float Acceleration;
+        public float MaxSpeed;
+    }
+
+    [Serializable]
+    public class Steering
+    {
+        public float Acceleration;
+        public float MaxRotation;
     }
 }
