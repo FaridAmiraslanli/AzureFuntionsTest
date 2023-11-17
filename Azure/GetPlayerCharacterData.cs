@@ -57,7 +57,7 @@ namespace DynamicBox.CloudScripts
             try
             {
                 var getCharacterDataResult = await serverApi.GetCharacterDataAsync(getCharacterDataRequest);
-                
+                int httpCodeForGetCharacterData = getCharacterDataResult.Error.HttpCode;
                 Engine engine = JsonConvert.DeserializeObject<Engine>(getCharacterDataResult.Result.Data[DataKeys.EngineKey].Value);
                 Steering steering = JsonConvert.DeserializeObject<Steering>(getCharacterDataResult.Result.Data[DataKeys.SteeringKey].Value);
                 Data data = new Data
@@ -77,8 +77,27 @@ namespace DynamicBox.CloudScripts
 
                 string json = JsonConvert.SerializeObject(resultData);
 
-                return json;
-
+                // return json;
+                if (httpCodeForGetCharacterData < 200 || httpCodeForGetCharacterData >= 300)
+                {
+                    return new
+                    {
+                        success = false,
+                        code = 400,
+                        message = "Bad Request",
+                        data = json
+                    };
+                }
+                else
+                {
+                    return new
+                    {
+                        success = true,
+                        code = 200,
+                        message = "Request Successful",
+                        data = json
+                    };
+                }
             }
             catch (PlayFabException ex)
             {

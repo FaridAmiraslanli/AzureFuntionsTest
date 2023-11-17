@@ -81,8 +81,27 @@ namespace DynamicBox.CloudScripts
             };
 
                 var updateCharacterDataResult = await serverApi.UpdateCharacterDataAsync(updateCharacterDataRequest);
-                
-                return updateCharacterDataResult.Result;
+                int httpCodeForUpdate = updateCharacterDataResult.Error.HttpCode;
+                if (httpCodeForUpdate < 200 || httpCodeForUpdate >= 300)
+                {
+                    return new
+                    {
+                        success = false,
+                        code = 400,
+                        message = "Bad Request",
+                        data = updateCharacterDataResult.Result
+                    };
+                }
+                else
+                {
+                    return new
+                    {
+                        success = true,
+                        code = 200,
+                        message = "Request successful",
+                        data = updateCharacterDataResult.Result
+                    };
+                }
             }
             catch (PlayFabException ex)
             {

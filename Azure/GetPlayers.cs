@@ -53,7 +53,7 @@ namespace DynamicBox.CloudScripts
 
                 var serverApi = new PlayFabServerInstanceAPI(settings, authContext);
                 var getUserDataResult = await serverApi.GetUserDataAsync(getUserDataRequest);
-
+                int httpCodeForGetPlayer = getUserDataResult.Error.HttpCode;
                 if (!getUserDataResult.Result.Data.ContainsKey(creditKey)) 
                 {
                     var updateUserDataRequest = new UpdateUserDataRequest
@@ -75,8 +75,29 @@ namespace DynamicBox.CloudScripts
                     return getUpdatedUserDataResult.Result.Data;
                 }
 
-                return getUserDataResult.Result.Data;
+                if (httpCodeForGetPlayer < 200 || httpCodeForGetPlayer >= 300)
+                {
+                    
+                    return new
+                    {
+                        success = false,
+                        code = 400,
+                        message = "Bad Request",
+                        data = getUserDataResult.Result.Data
+                    };
 
+                }
+                else
+                {
+                    return new
+                    {
+                        success = true,
+                        code = 200,
+                        message = "Request Successful",
+                        data = getUserDataResult.Result.Data
+                    };
+
+                }
             }
             catch (Exception ex)
             {
