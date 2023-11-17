@@ -27,9 +27,6 @@ namespace DynamicBox.CloudScripts
 
             var args = context.FunctionArgument;
 
-            string leftGunType = args["LeftGunType"];
-            string rightGunType = args["RightGunType"];
-
             var grantCharacterToUserRequest = new GrantCharacterToUserRequest
             {
                 CharacterName = args["CharacterName"],
@@ -55,7 +52,6 @@ namespace DynamicBox.CloudScripts
             await UpdateCC(req,log);
             return CharacterId;
         }
-
 
         //*************************************************************************************************************
 
@@ -112,9 +108,9 @@ namespace DynamicBox.CloudScripts
                 CharacterId = characterId,
                       Data = new Dictionary<string, string>()
                     {
-                        {DataKeys.LeftGunKey, leftGunType},
-                        {DataKeys.RightGunKey, rightGunType},
-					    {DataKeys.NitroKey, nitroValue},
+                        {DataKeys.LeftGunKey, $"\"{leftGunType}\""},
+                        {DataKeys.RightGunKey, $"\"{rightGunType}\""},
+					    {DataKeys.NitroKey, $"\"{nitroValue}\""},
 					    {DataKeys.EngineKey, engineJsonData},
 					    {DataKeys.SteeringKey, steeringJsonData},
                     }
