@@ -16,7 +16,7 @@ namespace DynamicBox.CloudScripts
 {
     public static class CreateCharacter
     {
-        public static string CharacterId;
+        public static string CharacterID;
         
         [FunctionName("CreateCharacter")]
         public static async Task<dynamic> CreateCC(
@@ -48,9 +48,18 @@ namespace DynamicBox.CloudScripts
             var serverApi = new PlayFabServerInstanceAPI(settings, authContext);
             var grantCharactertoUserResult = await serverApi.GrantCharacterToUserAsync(grantCharacterToUserRequest);
             
-            CharacterId = grantCharactertoUserResult.Result.CharacterId;
+            CharacterID = grantCharactertoUserResult.Result.CharacterId;
             await UpdateCC(req,log);
-            return CharacterId;
+
+            CreateCharacterResultData resultData = new CreateCharacterResultData
+            {
+                ResponseType = "CreateCharacter",
+                CharacterId = CharacterID
+            };
+
+            string json = JsonConvert.SerializeObject(resultData);
+
+            return json;
         }
 
         //*************************************************************************************************************
@@ -66,7 +75,7 @@ namespace DynamicBox.CloudScripts
 
             string titleId = args["TitleId"];
             string playFabId = args["PlayFabId"]; 
-            string characterId = CharacterId; 
+            string characterId = CharacterID; 
 
             string leftGunType = "Medium";
             string rightGunType = "Medium";
@@ -132,5 +141,14 @@ namespace DynamicBox.CloudScripts
                 };
             }
         }
+    }
+
+
+    [Serializable]
+    public class CreateCharacterResultData
+    {
+        public string ResponseType;
+
+        public string CharacterId;
     }
 }
