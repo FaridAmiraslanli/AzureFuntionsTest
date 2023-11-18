@@ -59,7 +59,7 @@ namespace DynamicBox.CloudScripts
                     CharacterId = CharacterID
                 };
                 // string json = JsonConvert.SerializeObject(resultData);
-                if (statusCodeForGrant > 200 || statusCodeForGrant >= 300)
+                if ((100 <=statusCodeForGrant && statusCodeForGrant < 200 )|| statusCodeForGrant >= 300)
                 {
                     return new
                     {

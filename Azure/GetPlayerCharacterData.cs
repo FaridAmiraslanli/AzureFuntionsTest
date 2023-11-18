@@ -78,7 +78,7 @@ namespace DynamicBox.CloudScripts
                 string json = JsonConvert.SerializeObject(resultData);
 
                 // return json;
-                if (httpCodeForGetCharacterData < 200 || httpCodeForGetCharacterData >= 300)
+                if ((100 <= httpCodeForGetCharacterData && httpCodeForGetCharacterData < 200) || httpCodeForGetCharacterData >= 300)
                 {
                     return new
                     {

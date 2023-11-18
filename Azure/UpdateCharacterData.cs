@@ -82,7 +82,7 @@ namespace DynamicBox.CloudScripts
 
                 var updateCharacterDataResult = await serverApi.UpdateCharacterDataAsync(updateCharacterDataRequest);
                 int httpCodeForUpdate = updateCharacterDataResult.Error.HttpCode;
-                if (httpCodeForUpdate < 200 || httpCodeForUpdate >= 300)
+                if ((100 <= httpCodeForUpdate && httpCodeForUpdate < 200) || httpCodeForUpdate >= 300)
                 {
                     return new
                     {

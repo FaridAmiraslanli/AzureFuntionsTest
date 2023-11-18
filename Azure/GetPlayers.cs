@@ -75,7 +75,7 @@ namespace DynamicBox.CloudScripts
                     return getUpdatedUserDataResult.Result.Data;
                 }
 
-                if (httpCodeForGetPlayer < 200 || httpCodeForGetPlayer >= 300)
+                if ((100 <= httpCodeForGetPlayer && httpCodeForGetPlayer < 200) || httpCodeForGetPlayer >= 300)
                 {
                     
                     return new
