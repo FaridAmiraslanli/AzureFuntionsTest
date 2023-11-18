@@ -30,11 +30,10 @@ namespace DynamicBox.CloudScripts
             string titleId = args["TitleId"];
             string playFabId = args["PlayFabId"]; 
             string characterId = args["CharacterId"]; 
-
             string leftGunType = args["LeftGunType"]; 
             string rightGunType = args["RightGunType"];
 
-            string nitroValue = "1.7";
+            string nitroValue = "1.11";
 
             var settings = new PlayFabApiSettings
             {
@@ -81,24 +80,25 @@ namespace DynamicBox.CloudScripts
             };
 
                 var updateCharacterDataResult = await serverApi.UpdateCharacterDataAsync(updateCharacterDataRequest);
-                int httpCodeForUpdate = updateCharacterDataResult.Error.HttpCode;
-                if ((100 <= httpCodeForUpdate && httpCodeForUpdate < 200) || httpCodeForUpdate >= 300)
-                {
-                    return new
-                    {
-                        success = false,
-                        code = 400,
-                        message = "Bad Request",
-                        data = updateCharacterDataResult.Result
-                    };
-                }
-                else
+
+                if (updateCharacterDataResult.Error == null)
                 {
                     return new
                     {
                         success = true,
                         code = 200,
                         message = "Request successful",
+                        data = updateCharacterDataResult.Result
+                    };
+                }
+                else
+                {
+                int httpCodeForUpdate = updateCharacterDataResult.Error.HttpCode;
+                    return new
+                    {
+                        success = false,
+                        code = httpCodeForUpdate,
+                        message = "Bad Request",
                         data = updateCharacterDataResult.Result
                     };
                 }
