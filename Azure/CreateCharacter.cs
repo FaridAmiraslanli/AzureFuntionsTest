@@ -49,34 +49,36 @@ namespace DynamicBox.CloudScripts
             try
             {
                 var grantCharactertoUserResult = await serverApi.GrantCharacterToUserAsync(grantCharacterToUserRequest);
-                int statusCodeForGrant = grantCharactertoUserResult.Error.HttpCode;
                 CharacterID = grantCharactertoUserResult.Result.CharacterId;
                 await UpdateCC(req, log);
+
 
                 CreateCharacterResultData resultData = new CreateCharacterResultData
                 {
                     ResponseType = "CreateCharacter",
                     CharacterId = CharacterID
                 };
-                // string json = JsonConvert.SerializeObject(resultData);
-                if ((100 <=statusCodeForGrant && statusCodeForGrant < 200 )|| statusCodeForGrant >= 300)
-                {
-                    return new
-                    {
-                        success = false,
-                        code = 400,
-                        message = "Request failed",
-                        data = resultData
-                    };
 
-                } else{
-                   
+                string json = JsonConvert.SerializeObject(resultData);
+
+                if (grantCharactertoUserResult.Error == null)
+                {
                     return new
                     {
                         success = true,
                         code = 200,
                         message = "Request successful",
-                        data = resultData
+                        data = grantCharactertoUserResult.Result
+                    };
+
+                } else{
+                    int statusCodeForGrant = grantCharactertoUserResult.Error.HttpCode;
+                    return new
+                    {
+                        success = false,
+                        code = statusCodeForGrant,
+                        message = "Request failed",
+                        data = grantCharactertoUserResult.Result
                     };
                 }
             }

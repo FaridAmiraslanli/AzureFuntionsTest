@@ -23,13 +23,14 @@ namespace DynamicBox.CloudScripts
         {
             try
             {
-                string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-                dynamic data = JsonConvert.DeserializeObject(requestBody);
+                FunctionExecutionContext<dynamic> context = JsonConvert.DeserializeObject<FunctionExecutionContext<dynamic>>(await req.ReadAsStringAsync());
 
-                string titleId = data.titleId;
-                string playFabId = data.playFabId;
-                string entityToken = data.entityToken;
-                string creditKey = data.creditKey;
+                var args = context.FunctionArgument;
+
+                string titleId = args["TitleId"];
+                string playFabId = args["PlayFabId"];
+                string entityToken = args["EntityToken"];
+                string creditKey = args["CreditKey"];
 
                 var getUserDataRequest = new GetUserDataRequest
                 {
@@ -53,7 +54,7 @@ namespace DynamicBox.CloudScripts
 
                 var serverApi = new PlayFabServerInstanceAPI(settings, authContext);
                 var getUserDataResult = await serverApi.GetUserDataAsync(getUserDataRequest);
-                int httpCodeForGetPlayer = getUserDataResult.Error.HttpCode;
+
                 if (!getUserDataResult.Result.Data.ContainsKey(creditKey)) 
                 {
                     var updateUserDataRequest = new UpdateUserDataRequest
@@ -72,22 +73,10 @@ namespace DynamicBox.CloudScripts
                     await serverApi.UpdateUserDataAsync(updateUserDataRequest);
 
                     var getUpdatedUserDataResult = await serverApi.GetUserDataAsync(getUserDataRequest);
-                    return getUpdatedUserDataResult.Result.Data;
+                    // return getUpdatedUserDataResult.Result.Data;
                 }
 
-                if ((100 <= httpCodeForGetPlayer && httpCodeForGetPlayer < 200) || httpCodeForGetPlayer >= 300)
-                {
-                    
-                    return new
-                    {
-                        success = false,
-                        code = 400,
-                        message = "Bad Request",
-                        data = getUserDataResult.Result.Data
-                    };
-
-                }
-                else
+                if (getUserDataResult.Error == null)
                 {
                     return new
                     {
@@ -96,7 +85,17 @@ namespace DynamicBox.CloudScripts
                         message = "Request Successful",
                         data = getUserDataResult.Result.Data
                     };
-
+                }
+                else
+                {
+                    int httpCodeForGetPlayer = getUserDataResult.Error.HttpCode;
+                    return new
+                    {
+                        success = false,
+                        code = httpCodeForGetPlayer,
+                        message = "Bad Request",
+                        data = getUserDataResult.Result.Data
+                    };
                 }
             }
             catch (Exception ex)

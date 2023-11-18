@@ -57,7 +57,7 @@ namespace DynamicBox.CloudScripts
             try
             {
                 var getCharacterDataResult = await serverApi.GetCharacterDataAsync(getCharacterDataRequest);
-                int httpCodeForGetCharacterData = getCharacterDataResult.Error.HttpCode;
+
                 Engine engine = JsonConvert.DeserializeObject<Engine>(getCharacterDataResult.Result.Data[DataKeys.EngineKey].Value);
                 Steering steering = JsonConvert.DeserializeObject<Steering>(getCharacterDataResult.Result.Data[DataKeys.SteeringKey].Value);
                 Data data = new Data
@@ -75,27 +75,29 @@ namespace DynamicBox.CloudScripts
                     Data = data
                 };
 
-                string json = JsonConvert.SerializeObject(resultData);
+                // string json = JsonConvert.SerializeObject(resultData);
 
                 // return json;
-                if ((100 <= httpCodeForGetCharacterData && httpCodeForGetCharacterData < 200) || httpCodeForGetCharacterData >= 300)
-                {
-                    return new
-                    {
-                        success = false,
-                        code = 400,
-                        message = "Bad Request",
-                        data = json
-                    };
-                }
-                else
+
+                if (getCharacterDataResult.Error == null)
                 {
                     return new
                     {
                         success = true,
                         code = 200,
                         message = "Request Successful",
-                        data = json
+                        data = resultData
+                    };
+                }
+                else
+                {
+                int httpCodeForGetCharacterData = getCharacterDataResult.Error.HttpCode;
+                    return new
+                    {
+                        success = false,
+                        code = httpCodeForGetCharacterData,
+                        message = "Bad Request",
+                        data = resultData
                     };
                 }
             }
