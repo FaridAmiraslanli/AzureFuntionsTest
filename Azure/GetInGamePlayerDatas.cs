@@ -35,7 +35,7 @@ namespace DynamicBox.CloudScripts
             var player2PlayfabId = args["player2PlayfabId"];
             var player3PlayfabId = args["player3PlayfabId"];
 
-            List<object> playarDataValues = new List<object>();
+            List<object> playerDataValues = new List<object>();
 
             string[] playerIds = { player1PlayfabId, player2PlayfabId, player3PlayfabId };
 
@@ -77,11 +77,11 @@ namespace DynamicBox.CloudScripts
                     await serverApi.UpdateUserDataAsync(updateUserDataRequest);
 
                     var getUpdatedUserDataResult = await serverApi.GetUserDataAsync(getUserDataRequest);
-                    playarDataValues.Add(getUpdatedUserDataResult.Result);
+                    playerDataValues.Add(getUpdatedUserDataResult.Result);
                 }
                 else
                 {
-                    playarDataValues.Add(getUserDataResult.Result);
+                    playerDataValues.Add(getUserDataResult.Result);
                 }
             }
 
@@ -91,10 +91,8 @@ namespace DynamicBox.CloudScripts
                 code = 200,
                 message = "Request successful",
                 data = new {
-                    player1PlayfabId = playarDataValues[0],
-                    player2PlayfabId = playarDataValues[1],
-                    player3PlayfabId = playarDataValues[2]
-            }
+                    playerData = playerDataValues
+                }
             };
             }
             catch (PlayFabException ex)
