@@ -17,13 +17,13 @@ namespace DynamicBox.CloudScripts
     public static class CreateCharacter
     {
         public static string CharacterID;
-        
+
         [FunctionName("CreateCharacter")]
         public static async Task<dynamic> CreateCC(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-           FunctionExecutionContext<dynamic> context = JsonConvert.DeserializeObject<FunctionExecutionContext<dynamic>>(await req.ReadAsStringAsync());
+            FunctionExecutionContext<dynamic> context = JsonConvert.DeserializeObject<FunctionExecutionContext<dynamic>>(await req.ReadAsStringAsync());
 
             var args = context.FunctionArgument;
 
@@ -46,20 +46,61 @@ namespace DynamicBox.CloudScripts
             };
 
             var serverApi = new PlayFabServerInstanceAPI(settings, authContext);
-            var grantCharactertoUserResult = await serverApi.GrantCharacterToUserAsync(grantCharacterToUserRequest);
-            
-            CharacterID = grantCharactertoUserResult.Result.CharacterId;
-            await UpdateCC(req,log);
-
-            CreateCharacterResultData resultData = new CreateCharacterResultData
+            try
             {
-                ResponseType = "CreateCharacter",
-                CharacterId = CharacterID
-            };
+                var grantCharactertoUserResult = await serverApi.GrantCharacterToUserAsync(grantCharacterToUserRequest);
+                CharacterID = grantCharactertoUserResult.Result.CharacterId;
+                await UpdateCC(req, log);
 
-            string json = JsonConvert.SerializeObject(resultData);
 
-            return json;
+                CreateCharacterResultData resultData = new CreateCharacterResultData
+                {
+                    ResponseType = "CreateCharacter",
+                    CharacterId = CharacterID
+                };
+
+                string json = JsonConvert.SerializeObject(resultData);
+
+                if (grantCharactertoUserResult.Error == null)
+                {
+                    return new
+                    {
+                        success = true,
+                        code = 200,
+                        message = "Request successful",
+                        data = grantCharactertoUserResult.Result
+                    };
+
+                } else{
+                    int statusCodeForGrant = grantCharactertoUserResult.Error.HttpCode;
+                    return new
+                    {
+                        success = false,
+                        code = statusCodeForGrant,
+                        message = "Request failed",
+                        data = grantCharactertoUserResult.Result
+                    };
+                }
+            }
+            catch (PlayFabException ex)
+            {
+
+                log.LogError($"Error getting character data: {ex.Message}");
+                return new
+                {
+                    success = false,
+                    error = ex.Message
+                };
+            }
+            catch (Exception ex)
+            {
+                log.LogError($"Error while ctreating character: {ex.Message}");
+                return new
+                {
+                    success = false,
+                    error = ex.Message
+                };
+            }
         }
 
         //*************************************************************************************************************
@@ -74,8 +115,8 @@ namespace DynamicBox.CloudScripts
             var args = context.FunctionArgument;
 
             string titleId = args["TitleId"];
-            string playFabId = args["PlayFabId"]; 
-            string characterId = CharacterID; 
+            string playFabId = args["PlayFabId"];
+            string characterId = CharacterID;
 
             string leftGunType = "Medium";
             string rightGunType = "Medium";
@@ -115,25 +156,40 @@ namespace DynamicBox.CloudScripts
             {
                 PlayFabId = playFabId,
                 CharacterId = characterId,
-                      Data = new Dictionary<string, string>()
+                Data = new Dictionary<string, string>()
                     {
                         {DataKeys.LeftGunKey, $"\"{leftGunType}\""},
                         {DataKeys.RightGunKey, $"\"{rightGunType}\""},
-					    {DataKeys.NitroKey, $"\"{nitroValue}\""},
-					    {DataKeys.EngineKey, engineJsonData},
-					    {DataKeys.SteeringKey, steeringJsonData},
+                        {DataKeys.NitroKey, $"\"{nitroValue}\""},
+                        {DataKeys.EngineKey, engineJsonData},
+                        {DataKeys.SteeringKey, steeringJsonData},
                     }
             };
 
             try
             {
                 var updateCharacterDataResult = await serverApi.UpdateCharacterDataAsync(updateCharacterDataRequest);
-                
-                return updateCharacterDataResult.Result;
+
+                return new
+                {
+                    success = true,
+                    code = 200,
+                    message = "Request successful",
+                    data = updateCharacterDataResult.Result
+                };
             }
             catch (PlayFabException ex)
             {
                 log.LogError($"Error getting character data: {ex.Message}");
+                return new
+                {
+                    success = false,
+                    error = ex.Message
+                };
+            }
+            catch (Exception ex)
+            {
+                log.LogError($"Error while updating character: {ex.Message}");
                 return new
                 {
                     success = false,

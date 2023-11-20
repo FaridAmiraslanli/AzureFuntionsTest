@@ -23,6 +23,7 @@ namespace DynamicBox.CloudScripts
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
+            try{
             FunctionExecutionContext<dynamic> context = JsonConvert.DeserializeObject<FunctionExecutionContext<dynamic>>(await req.ReadAsStringAsync());
 
             var args = context.FunctionArgument;
@@ -34,7 +35,7 @@ namespace DynamicBox.CloudScripts
             var player2PlayfabId = args["player2PlayfabId"];
             var player3PlayfabId = args["player3PlayfabId"];
 
-            List<string> playarDataValues = new List<string>();
+            List<object> playerDataValues = new List<object>();
 
             string[] playerIds = { player1PlayfabId, player2PlayfabId, player3PlayfabId };
 
@@ -76,15 +77,42 @@ namespace DynamicBox.CloudScripts
                     await serverApi.UpdateUserDataAsync(updateUserDataRequest);
 
                     var getUpdatedUserDataResult = await serverApi.GetUserDataAsync(getUserDataRequest);
-                    playarDataValues.Add(getUpdatedUserDataResult.Result.Data[CreditKey].Value);
+                    playerDataValues.Add(getUpdatedUserDataResult.Result);
                 }
                 else
                 {
-                    playarDataValues.Add(getUserDataResult.Result.Data[CreditKey].Value);
+                    playerDataValues.Add(getUserDataResult.Result);
                 }
             }
 
-            return playarDataValues[0] + "/" + playarDataValues[1] + "/" + playarDataValues[2];
+            return new
+            {
+                success = true,
+                code = 200,
+                message = "Request successful",
+                data = new {
+                    playerData = playerDataValues
+                }
+            };
+            }
+            catch (PlayFabException ex)
+            {
+                log.LogError($"Playfab error while getting in game player data: {ex.Message}");
+                return new
+                {
+                    success = false,
+                    error = ex.Message
+                };
+            }
+            catch (Exception ex)
+            {
+                log.LogError($"Error while getting in game player data: {ex.Message}");
+                return new
+                {
+                    success = false,
+                    error = ex.Message
+                };
+            }
         }
     }
 }

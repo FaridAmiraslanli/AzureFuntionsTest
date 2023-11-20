@@ -23,13 +23,14 @@ namespace DynamicBox.CloudScripts
         {
             try
             {
-                string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-                dynamic data = JsonConvert.DeserializeObject(requestBody);
+                FunctionExecutionContext<dynamic> context = JsonConvert.DeserializeObject<FunctionExecutionContext<dynamic>>(await req.ReadAsStringAsync());
 
-                string titleId = data.titleId;
-                string playFabId = data.playFabId;
-                string entityToken = data.entityToken;
-                string creditKey = data.creditKey;
+                var args = context.FunctionArgument;
+
+                string titleId = args["TitleId"];
+                string playFabId = args["PlayFabId"];
+                string entityToken = args["EntityToken"];
+                string creditKey = args["CreditKey"];
 
                 var getUserDataRequest = new GetUserDataRequest
                 {
@@ -72,11 +73,30 @@ namespace DynamicBox.CloudScripts
                     await serverApi.UpdateUserDataAsync(updateUserDataRequest);
 
                     var getUpdatedUserDataResult = await serverApi.GetUserDataAsync(getUserDataRequest);
-                    return getUpdatedUserDataResult.Result.Data;
+                    // return getUpdatedUserDataResult.Result.Data;
                 }
 
-                return getUserDataResult.Result.Data;
-
+                if (getUserDataResult.Error == null)
+                {
+                    return new
+                    {
+                        success = true,
+                        code = 200,
+                        message = "Request Successful",
+                        data = getUserDataResult.Result.Data
+                    };
+                }
+                else
+                {
+                    int httpCodeForGetPlayer = getUserDataResult.Error.HttpCode;
+                    return new
+                    {
+                        success = false,
+                        code = httpCodeForGetPlayer,
+                        message = "Bad Request",
+                        data = getUserDataResult.Result.Data
+                    };
+                }
             }
             catch (Exception ex)
             {

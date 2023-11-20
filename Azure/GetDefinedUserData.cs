@@ -22,6 +22,8 @@ namespace DynamicBox.CloudScripts
         public static async Task<dynamic> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req, ILogger log)
         {
+            try{
+                
             FunctionExecutionContext<dynamic> context = JsonConvert.DeserializeObject<FunctionExecutionContext<dynamic>>(await req.ReadAsStringAsync());
 
             var args = context.FunctionArgument;
@@ -66,10 +68,71 @@ namespace DynamicBox.CloudScripts
                 await serverApi.UpdateUserDataAsync(updateUserDataRequest);
 
                 var getUpdatedUserDataResult = await serverApi.GetUserDataAsync(getUserDataRequest);
-                return getUpdatedUserDataResult.Result.Data;
+                // return getUpdatedUserDataResult.Result.Data;
+                if (getUpdatedUserDataResult.Error == null)
+                {
+                    return new
+                    {
+                        success = true,
+                        code = 200,
+                        message = "Request successful",
+                        data = getUpdatedUserDataResult.Result
+                    };
+
+                }
+                else
+                {
+                    int statusCodeForUpdate = getUpdatedUserDataResult.Error.HttpCode;
+                    return new
+                    {
+                        success = false,
+                        code = statusCodeForUpdate,
+                        message = "Request failed",
+                        data = getUpdatedUserDataResult.Result
+                    };
+                }
+            }
+            else
+            {
+            if (getUserDataResult.Error == null)
+            {
+                return new
+                {
+                    success = true,
+                    code = 200,
+                    message = "Request successful",
+                    data = getUserDataResult.Result
+                };
+            }
+            else
+            {
+                int statusCodeForGetUser = getUserDataResult.Error.HttpCode;
+                return new
+                {
+                    success = false,
+                    code = statusCodeForGetUser,
+                    message = "Request failed",
+                    data = getUserDataResult.Result
+                };
+            }
             }
 
-            return getUserDataResult.Result.Data;
+            }
+            catch (PlayFabException ex){
+                log.LogError($"Playfab error while getting user data: {ex.Message}");
+                return new
+                {
+                    success = false,
+                    error = ex.Message
+                };
+            } catch (Exception ex){
+                log.LogError($"Error while getting user data: {ex.Message}");
+                return new
+                {
+                    success = false,
+                    error = ex.Message
+                };
+            }
         }
     }
 }
