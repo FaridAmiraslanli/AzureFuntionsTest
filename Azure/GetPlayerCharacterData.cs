@@ -62,8 +62,8 @@ namespace DynamicBox.CloudScripts
                 Steering steering = JsonConvert.DeserializeObject<Steering>(getCharacterDataResult.Result.Data[DataKeys.SteeringKey].Value);
                 Data data = new Data
                 {
-                    LeftGunType = getCharacterDataResult.Result.Data[DataKeys.LeftGunKey].Value,
-                    RightGunType = getCharacterDataResult.Result.Data[DataKeys.RightGunKey].Value,
+                    LeftGunType = int.Parse(getCharacterDataResult.Result.Data[DataKeys.LeftGunKey].Value),
+                    RightGunType = int.Parse(getCharacterDataResult.Result.Data[DataKeys.RightGunKey].Value),
                     Nitro = float.Parse(getCharacterDataResult.Result.Data[DataKeys.NitroKey].Value),
                     Engine = engine,
                     Steering = steering
@@ -134,8 +134,8 @@ namespace DynamicBox.CloudScripts
     [Serializable]
     public class Data
     {
-        public string LeftGunType;
-        public string RightGunType;
+        public int LeftGunType;
+        public int RightGunType;
         public float Nitro;
         public Engine Engine;
         public Steering Steering;

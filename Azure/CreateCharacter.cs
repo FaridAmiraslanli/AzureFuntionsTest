@@ -118,10 +118,10 @@ namespace DynamicBox.CloudScripts
             string playFabId = args["PlayFabId"];
             string characterId = CharacterID;
 
-            string leftGunType = "Medium";
-            string rightGunType = "Medium";
+            int leftGunType = 1; // Medium Range
+            int rightGunType = 1;
 
-            string nitroValue = "1.7";
+            float nitroValue = 1.7f;
 
             var settings = new PlayFabApiSettings
             {
@@ -158,9 +158,9 @@ namespace DynamicBox.CloudScripts
                 CharacterId = characterId,
                 Data = new Dictionary<string, string>()
                     {
-                        {DataKeys.LeftGunKey, $"\"{leftGunType}\""},
-                        {DataKeys.RightGunKey, $"\"{rightGunType}\""},
-                        {DataKeys.NitroKey, $"\"{nitroValue}\""},
+                        {DataKeys.LeftGunKey, $"{leftGunType}"},
+                        {DataKeys.RightGunKey, $"{rightGunType}"},
+                        {DataKeys.NitroKey, $"{nitroValue}"},
                         {DataKeys.EngineKey, engineJsonData},
                         {DataKeys.SteeringKey, steeringJsonData},
                     }
@@ -184,7 +184,7 @@ namespace DynamicBox.CloudScripts
                 return new
                 {
                     success = false,
-                    error = ex.Message
+                    message = ex.Message
                 };
             }
             catch (Exception ex)
@@ -193,7 +193,7 @@ namespace DynamicBox.CloudScripts
                 return new
                 {
                     success = false,
-                    error = ex.Message
+                    message = ex.Message
                 };
             }
         }

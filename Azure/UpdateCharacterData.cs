@@ -30,10 +30,10 @@ namespace DynamicBox.CloudScripts
             string titleId = args["TitleId"];
             string playFabId = args["PlayFabId"]; 
             string characterId = args["CharacterId"]; 
-            string leftGunType = args["LeftGunType"]; 
-            string rightGunType = args["RightGunType"];
+            int leftGunType = args["LeftGunType"]; 
+            int rightGunType = args["RightGunType"];
 
-            string nitroValue = "1.11";
+            float nitroValue = 1.11f;
 
             var settings = new PlayFabApiSettings
             {
@@ -71,9 +71,9 @@ namespace DynamicBox.CloudScripts
                 CharacterId = characterId,
                       Data = new Dictionary<string, string>()
                     {
-                        {DataKeys.LeftGunKey, $"\"{leftGunType}\""},
-                        {DataKeys.RightGunKey, $"\"{rightGunType}\""},
-					    {DataKeys.NitroKey, $"\"{nitroValue}\""},
+                        {DataKeys.LeftGunKey, $"{leftGunType}"},
+                        {DataKeys.RightGunKey, $"{rightGunType}"},
+					    {DataKeys.NitroKey, $"{nitroValue}"},
 					    {DataKeys.EngineKey, engineJsonData},
 					    {DataKeys.SteeringKey, steeringJsonData},
                     }
@@ -99,17 +99,17 @@ namespace DynamicBox.CloudScripts
                         success = false,
                         code = httpCodeForUpdate,
                         message = "Bad Request",
-                        data = updateCharacterDataResult.Result
+                        data = updateCharacterDataResult
                     };
                 }
             }
-            catch (PlayFabException ex)
+            catch (PlayFabException exception)
             {
-                log.LogError($"Error getting character data: {ex.Message}");
+                log.LogError($"Error getting character data: {exception.Message}");
                 return new
                 {
                     success = false,
-                    error = ex.Message
+                    message = exception.Message
                 };
             }
         }
